@@ -2,6 +2,21 @@
 
 ## Last Updated
 
+2026-08-26 — AUTH STACK CLEAN-SLATE CUTOVER (branch
+  `codex/unified-auth-provider`, committed and pushed; pairs with
+  product-mono `codex/unified-auth-schema`). The Better Auth 1.7 stack now
+  cuts over instead of running parallel stores: token/consent models map to
+  canonical `ba_oauth_access_tokens`/`ba_oauth_consents` (the `_17_` tables
+  and the legacy-window design are gone), the dead `oauthApplication` mapping
+  is removed (no such model in the 1.7 mcp plugin), SIWS writes
+  `createLocalAccountIssuer(SIWS_PROVIDER_ID)` matching core's
+  `local:<provider_id>` issuer convention (which the schema migration also
+  backfills), and portal client lookups read `ba_oauth_clients.redirect_uris`
+  (jsonb) instead of the dropped `ba_oauth_applications`. At cutover MCP
+  clients re-register via DCR/CIMD and users re-consent once; sessions and
+  canonical identity are untouched. Downstream `codex/unified-auth-*` and
+  release branches carry the merge.
+
 2026-08-24 — CI PROGRESS BAR ON THE DEPLOYMENTS TAB (branch
   `feat/deploy-ci-progress-bar`). Importing/redeploying an app from a linked
   repository showed one static line ("Building… (building)") for the whole
