@@ -27,6 +27,10 @@ Harness.displayName = "Harness";
 const renderControlContext = (
   clientOverrides?: Record<string, unknown>,
   threadMetadata = new Map<string, ThreadMetadata>(),
+  options?: {
+    applicationId?: number | string | null;
+    appPlatforms?: string | string[];
+  },
 ) => {
   const ref = React.createRef<HarnessHandle>();
   const aomiClient = {
@@ -44,6 +48,8 @@ const renderControlContext = (
     <ControlContextProvider
       aomiClient={aomiClient as never}
       sessionId="session-1"
+      applicationId={options?.applicationId}
+      appPlatforms={options?.appPlatforms}
       getThreadMetadata={(threadId) => threadMetadata.get(threadId)}
       updateThreadMetadata={(threadId, updates) => {
         const previous = threadMetadata.get(threadId);
@@ -111,6 +117,28 @@ afterEach(() => {
 });
 
 describe("ControlContextProvider", () => {
+  it("routes app and model discovery by application id", async () => {
+    const getApps = vi.fn(async () => [{ name: "somm-agent" }]);
+    const getModels = vi.fn(async () => ["auto-model"]);
+    renderControlContext({ getApps, getModels }, new Map(), {
+      applicationId: 2936606,
+      appPlatforms: ["somm.finance"],
+    });
+
+    await waitFor(() => {
+      expect(getApps).toHaveBeenCalledTimes(1);
+      expect(getModels).toHaveBeenCalledTimes(1);
+    });
+
+    expect(getApps.mock.calls[0]?.[1]).toMatchObject({
+      applicationId: "2936606",
+      platforms: ["somm.finance"],
+    });
+    expect(getModels.mock.calls[0]?.[1]).toMatchObject({
+      applicationId: "2936606",
+    });
+  });
+
   it("initializes client id synchronously on first render", () => {
     const { getControl } = renderControlContext();
     expect(getControl().state.clientId).toBeTruthy();

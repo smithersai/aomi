@@ -501,6 +501,9 @@ export interface AomiSecretSlot {
   required: boolean;
 }
 
+/** Hosted application artifact availability reported by the backend catalog. */
+export type AomiArtifactStatus = "ready" | "pending" | "fetch_backoff";
+
 /**
  * GET /api/thread/apps
  * One entry per app the user can use. `secrets` is empty for apps that
@@ -515,5 +518,6 @@ export interface AomiAppDescriptor {
   isActive?: boolean | null;
   isPublic?: boolean | null;
   artifactReady?: boolean | null;
+  artifactStatus?: AomiArtifactStatus | null;
   secrets?: AomiSecretSlot[];
 }
