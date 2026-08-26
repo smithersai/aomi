@@ -2,7 +2,7 @@
 
 Smithers Factory encoding of aomi-labs/aomi, 2026-08-26. Companion to
 aomi-sdk's SMITHERS-RUST-NOTES.md. Everything here is design-partner code:
-the graph loads for real (119 targets, zero warnings) and every gap is
+the graph loads for real (121 targets, zero warnings) and every gap is
 recorded, not hidden.
 
 ## The real graph
@@ -10,7 +10,7 @@ recorded, not hidden.
 Verified 2026-08-26 with
 `node /Users/williamcory/flows/flows/packages/build-cli/src/main.js`:
 
-- `query '//...'` from the repo root: **119 targets**, classified edges
+- `query '//...'` from the repo root: **121 targets**, classified edges
   (`data`, `gates`, `services`, `deps`), `warnings: []`.
 - `query 'deps(//packages/smither:shipApp)'`: 7 dependencies —
   describeApp, fixApp, generateApp, planLint, smokeApp, srcs,
