@@ -9534,11 +9534,14 @@ async function accountWhoamiCommand(config) {
     }
     if (user.tier) console.log(`Tier:     ${user.tier}`);
     if (user.status) console.log(`Status:   ${user.status}`);
-    const authorizations = account.signing_authorizations;
-    console.log(`Wallets:  ${authorizations.length}`);
-    for (const authorization of authorizations) {
+    const policies = account.signing_policies;
+    console.log(`Wallets:  ${policies.length}`);
+    for (const policy of policies) {
+      const userAccount = account.user_accounts.find(
+        (candidate) => candidate.address.chain === policy.address.chain && (policy.address.chain === "evm" ? candidate.address.address.toLowerCase() === policy.address.address.toLowerCase() : candidate.address.address === policy.address.address)
+      );
       console.log(
-        `- ${formatWalletChainType(authorization.address.chain)} [${(_b = authorization.provider) != null ? _b : "self-custody"}]: ${authorization.address.address}`
+        `- ${formatWalletChainType(policy.address.chain)} [${(_b = userAccount == null ? void 0 : userAccount.auth_provider) != null ? _b : "self-custody"}]: ${policy.address.address}`
       );
     }
     printDataFileLocation({ verbose: config.verbose });
