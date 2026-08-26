@@ -113,6 +113,10 @@ gitDiff.
 
 ## Unexpressed behavior
 
+- **specs/, docs/, memory/, demo/, output/, artifacts/** carry no build
+  role (product specs, session logs, and generated captures), so no
+  PACKAGE.ts was added for them. If a spec-check target is ever wanted,
+  the agentic lint suite is the pattern.
 - **ci.yml's policy jobs** (promotion-policy, hotfix-divergence,
   all-checks) are branch-protection logic over git refs, not tree
   checks. They have no target equivalent; generated ci.yml would drop
