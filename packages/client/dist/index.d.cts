@@ -984,6 +984,8 @@ interface AomiAppDescriptor {
     artifactReady?: boolean | null;
     artifactStatus?: AomiArtifactStatus | null;
     secrets?: AomiSecretSlot[];
+    /** Exact EVM chain IDs declared by the official app release. */
+    chainIds?: number[];
 }
 
 type RequestResponse$1 = (method: AomiHttpMethod, path: string, options?: AomiRequestOptions) => Promise<Response>;

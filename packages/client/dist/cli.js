@@ -648,7 +648,7 @@ var init_shared = __esm({
 
 // src/app-descriptor.ts
 function normalizeAppDescriptor(item) {
-  var _a3, _b, _c;
+  var _a3, _b, _c, _d;
   if (typeof item === "string") {
     const name2 = item.trim();
     return name2 ? { name: name2 } : null;
@@ -691,6 +691,16 @@ function normalizeAppDescriptor(item) {
     descriptor.artifactStatus = artifactStatus;
   }
   descriptor.secrets = Array.isArray(raw.secrets) ? raw.secrets : [];
+  const rawChainIds = (_d = raw.chainIds) != null ? _d : raw.chain_ids;
+  if (Array.isArray(rawChainIds)) {
+    descriptor.chainIds = [
+      ...new Set(
+        rawChainIds.filter(
+          (chainId3) => typeof chainId3 === "number" && Number.isSafeInteger(chainId3) && chainId3 > 0
+        )
+      )
+    ].sort((left, right) => left - right);
+  }
   for (const key of [
     "id",
     "application_id",
@@ -698,7 +708,8 @@ function normalizeAppDescriptor(item) {
     "is_active",
     "is_public",
     "artifact_ready",
-    "artifact_status"
+    "artifact_status",
+    "chain_ids"
   ]) {
     delete descriptor[key];
   }
