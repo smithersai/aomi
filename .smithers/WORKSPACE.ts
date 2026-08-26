@@ -11,7 +11,7 @@ const workspaces = S.file("//pnpm-workspace.yaml");
 const runtime = S.Runtime.Node({ manifest: packageJson });
 
 // Intended: S.PackageManager.Pnpm({ manifest: packageJson, lockfile,
-// workspaces, audit: { severity: "critical" } }) — the manifest/lockfile
+// workspaces, audit: { severity: "critical" } }): the manifest/lockfile
 // form, with pnpm-workspace.yaml's overrides as key material. The loader
 // today ships only the Yarn declaration in that shape; its Pnpm form is the
 // BUILD-era version pin used below. The version literal is the loader's

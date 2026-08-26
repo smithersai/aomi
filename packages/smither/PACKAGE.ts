@@ -35,9 +35,9 @@ const typeCheck = S.Shell.Test({
 //    package). Write sets below name that tree, and the cargo stages run
 //    with sandbox: "none" because the SDK checkout and cargo's cache are
 //    host-coupled state outside this workspace. Modeling the SDK as a
-//    workspace-declared dynamic resource — one network workflow syncs and
+//    workspace-declared dynamic resource: one network workflow syncs and
 //    builds it, static dependents consume it offline, the node_modules
-//    pattern — is proposed API recorded in SMITHERS-NOTES.md.
+//    pattern is proposed API recorded in SMITHERS-NOTES.md.
 // 2. AOMI_APP and AOMI_SMOKE_PROMPT arrive as invocation inputs of the
 //    describe target's payload; the deterministic stages read them from the
 //    approved plan at execution time.

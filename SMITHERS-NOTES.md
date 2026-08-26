@@ -12,10 +12,10 @@ Verified 2026-08-26 with
 
 - `query '//...'` from the repo root: **121 targets**, classified edges
   (`data`, `gates`, `services`, `deps`), `warnings: []`.
-- `query 'deps(//packages/smither:shipApp)'`: 7 dependencies —
+- `query 'deps(//packages/smither:shipApp)'`: 7 dependencies:
   describeApp, fixApp, generateApp, planLint, smokeApp, srcs,
   validateApp; gates edges to smokeApp and validateApp.
-- `query 'deps(//apps/build:build)'`: 11 dependencies — the app srcs plus
+- `query 'deps(//apps/build:build)'`: 11 dependencies: the app srcs plus
   the client, deploy, react, smither, and shadcn-registry build chain.
 - `graph '//:ci'`: the ci suite fans out to agentLints, buildPackages,
   check, checkApps, and openapiContract.
@@ -31,7 +31,7 @@ Verified 2026-08-26 with
 
 What is encoded:
 
-- **Install/runtime**: `.smithers/WORKSPACE.ts` — Node runtime from the
+- **Install/runtime**: `.smithers/WORKSPACE.ts`: Node runtime from the
   manifest, pnpm package manager (see the Pnpm note below), node_modules,
   flags (`--prod`), host bins (aomi-build, aomi-run, actionlint, cargo,
   docker, python3, vercel, zizmor), SmithersCloud memory, sandboxes,
@@ -50,7 +50,7 @@ What is encoded:
   with the smoke test as a `services:` dependent.
 - **Agent automation**: `//:agentLints` (engineNamesLint,
   registryParityLint, secretHygieneLint with `fixes:` write sets and
-  prompts in `workflows/lints/`), and the central demo — the Aomi Build
+  prompts in `workflows/lints/`), and the central demo: the Aomi Build
   pipeline in
   `packages/smither/PACKAGE.ts`:
   `describeApp` (S.Agent.Diff, typed payload, emits `plans/<app>.json`,
@@ -58,9 +58,9 @@ What is encoded:
   `generateApp` (aomi-build codegen) → `validateApp` (cargo fmt/clippy/
   test trio) → `fixApp` (repair agent, gated, maxRounds 3) → `smokeApp`
   (compile + aomi-run) → `shipApp` (deploy, approval required, named
-  secret, both gates green). `//apps/build:buildPipeline` aliases it —
-  the page Cecilia named drives exactly this plan.
-- **CI generation**: `.github/PACKAGE.ts` — ci, preview-e2e, and
+  secret, both gates green). `//apps/build:buildPipeline` aliases it.
+  The page Cecilia named drives exactly this plan.
+- **CI generation**: `.github/PACKAGE.ts`: ci, preview-e2e, and
   production-smoke as `S.Github.Workflow`, `S.Github.CiGen` with the two
   publish pipelines, the rollback, and the nightly fallback in
   `preserve`; the workflow-policy job as a target.
@@ -86,10 +86,10 @@ What is encoded:
 ## API symbols used here that neither force nor optimism uses
 
 Specified in one line each; all are proposed, and none weakened the
-graph — where the loader lacks a construct, the file says so in a
+graph: where the loader lacks a construct, the file says so in a
 comment and the intended form stays recorded here.
 
-- `S.PackageManager.Pnpm({ manifest, lockfile, workspaces, audit })` —
+- `S.PackageManager.Pnpm({ manifest, lockfile, workspaces, audit })`:
   WORKSPACE.ts manifest/lockfile form for pnpm, with
   pnpm-workspace.yaml's overrides as key material. viem uses the same
   intended form. The loader today ships only the Yarn declaration in
@@ -99,7 +99,7 @@ comment and the intended form stays recorded here.
   form in its comment.
 - Dynamic cross-repo resource for the aomi-sdk checkout (no constructor
   exists): one network workflow syncs and builds the SDK
-  (`AOMI_SDK_ROOT`), static dependents consume it — the factory model's
+  (`AOMI_SDK_ROOT`), static dependents consume it: the factory model's
   node_modules rule. Today the smither pipeline declares the write set
   (`../../../aomi-sdk/apps/**`) and `sandbox: "none"` instead.
 - Typed BuildPlan as a graph value: expressed with existing pieces
@@ -107,7 +107,7 @@ comment and the intended form stays recorded here.
   schema + `scripts/validate-build-plan.ts`), so no new symbol was
   needed. Workflow recursion (a plan emitting a per-app plan) is the
   factory construct this stands in for.
-- `S.Cron({ schedule, run })` — viem's precedent for schedule triggers;
+- `S.Cron({ schedule, run })`: viem's precedent for schedule triggers;
   preview-e2e-nightly stays preserved until it lands (comment in
   `.github/PACKAGE.ts`).
 
@@ -131,12 +131,12 @@ gitDiff.
   CiGen API arrives.
 - **Vercel preview URL resolution** (`.github/scripts/
   resolve-preview-urls.sh`) feeds Playwright env; invocation inputs, not
-  key material — noted on the tests targets.
+  key material: noted on the tests targets.
 - **The smither run-state backend** (PGlite/postgres under
   `.smithers/runs`) is runtime state, not build graph. The workspace
   cache directory is `.flows`; recommend `SMITHER_RUNS_ROOT` stay
   outside it.
-- **`dev:landing:live`'s tsup watch + dev composition** — a watch-mode
+- **`dev:landing:live`'s tsup watch + dev composition**: a watch-mode
   pair; encoded as separate targets (buildLib, landing dev), retained
   as a compatibility script.
 - **repowiki's index output** is undocumented; the repowiki targets
@@ -165,13 +165,13 @@ During authoring, all fixed by correcting our own declarations; the
 loader was never patched:
 
 1. `module_import_failed: evaluating the workspace's declaration modules
-   failed: rootSrcs is not defined` — a const was renamed without
+   failed: rootSrcs is not defined`: a const was renamed without
    updating the export map (declaration order/TDZ class).
 2. `undeclared_host_bin: S.Host.bin("python3") names no binary in the
-   workspace S.Host({ bins }) declaration` — fixed by declaring
+   workspace S.Host({ bins }) declaration`: fixed by declaring
    `python3` in `.smithers/WORKSPACE.ts`.
 3. Two schema violations caught before load: `readiness: { port, timeout }`
-   is not a legal Serve readiness (port form takes no timeout) — fixed
+   is not a legal Serve readiness (port form takes no timeout): fixed
    to `{ port }` with a `health` contract.
 4. Non-blocking substitution, recorded above: the Pnpm
    manifest/lockfile form does not exist, so the version-pinned form is
@@ -185,12 +185,12 @@ entry.
 ## Deferred cross-repo work
 
 - **product-mono (Rust backend)**: same Smithers treatment when
-  reachable — it owns the OpenAPI the fixture regenerates from, the
+  reachable: it owns the OpenAPI the fixture regenerates from, the
   repowiki binary `scripts/repowiki` invokes, the local auth stack's
   backend, and the `api.aomi.dev` contract CI gates promotion on. Its
   encoding is the natural third repo of this demo.
 - **community-apps**: inspected and intentionally not encoded. It is not
-  a Cargo workspace — no root manifest; it is the release-builder that
+  a Cargo workspace: no root manifest; it is the release-builder that
   stages single-crate cdylib apps under `apps/<installation-id>/<app>/`
   and builds them in GitHub Actions. Those shapes (per-app cdylib
   release CI, manifest-driven staging) are already present in aomi-sdk's
