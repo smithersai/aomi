@@ -8,10 +8,23 @@ const setup = S.Github.Setup({
   cacheToken: S.Secret("SMITHERS_CACHE_TOKEN"),
 });
 
-// ci.yml's packages and apps jobs as one affected pipeline. The policy jobs
-// (promotion-policy, hotfix-divergence, workflow-policy) and the all-checks
-// aggregate are GitHub-native branch logic without target equivalents; they
-// are unexpressed here and recorded in SMITHERS-NOTES.md.
+// ci.yml's workflow-policy job as a target: actionlint plus zizmor over the
+// workflows, including the generated ones.
+const workflowPolicy = S.Shell.Test({
+  bun: "await $`${python} .github/scripts/check-workflow-policy.py`\nawait $`${actionlint}`\nawait $`${zizmor} --min-severity high .github/workflows`",
+  using: {
+    python: S.Host.bin("python3"),
+    actionlint: S.Host.bin("actionlint"),
+    zizmor: S.Host.bin("zizmor"),
+  },
+  data: [S.glob(["workflows/**", "actions/**", "scripts/**"])],
+});
+
+// ci.yml's packages, apps, and workflow-policy jobs as one affected
+// pipeline. The remaining jobs (promotion-policy, hotfix-divergence, and the
+// all-checks aggregate) are GitHub-native branch logic over git refs, not
+// tree checks, so they have no target equivalent; they are unexpressed here
+// and recorded in SMITHERS-NOTES.md.
 const ci = S.Github.Workflow({
   name: "ci",
   on: {
@@ -25,7 +38,7 @@ const ci = S.Github.Workflow({
   },
   setup,
   affected: true,
-  run: [root.ci, root.buildPackages, root.buildApps, root.openapiContract],
+  run: [root.ci, workflowPolicy],
 });
 
 // preview-e2e.yml: the two anonymous smoke specs against same-SHA Vercel
@@ -47,18 +60,6 @@ const productionSmoke = S.Github.Workflow({
   on: { push: { branches: ["prod"] } },
   setup,
   run: [tests.productionSmoke],
-});
-
-// ci.yml's workflow-policy job as a target: actionlint plus zizmor over the
-// workflows, including the generated ones.
-const workflowPolicy = S.Shell.Test({
-  bun: "await $`${python} .github/scripts/check-workflow-policy.py`\nawait $`${actionlint}`\nawait $`${zizmor} --min-severity high .github/workflows`",
-  using: {
-    python: S.Host.bin("python3"),
-    actionlint: S.Host.bin("actionlint"),
-    zizmor: S.Host.bin("zizmor"),
-  },
-  data: [S.glob(["workflows/**", "actions/**", "scripts/**"])],
 });
 
 // The drift-checked renderer. Hand-written workflows without target

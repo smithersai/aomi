@@ -76,3 +76,10 @@ next-env.d.ts
 
 # Smithers target cache
 /.flows
+
+# The Smithers Factory workspace declarations are source, not run state.
+# The rule above ignores every .smithers/ tree; re-include this one's
+# TypeScript declarations and keep its run state ignored.
+!/.smithers/
+/.smithers/*
+!/.smithers/*.ts

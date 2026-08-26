@@ -73,8 +73,15 @@ What is encoded:
   verbatim: `vercel-build` (Vercel invokes it), `postinstall`
   (fumadocs-mdx; pnpm/Vercel invoke it), dev port/ngrok/localhost
   variants, `start*`, `prepublishOnly`, per-app `clean:dist` (chained by
-  the retained root clean scripts' dependents), telegram's `test:unit`
-  and `check` composites.
+  the retained root clean scripts' dependents), telegram's `check`
+  composite. Where delegation would otherwise have changed a script's
+  behavior, a target was added instead of the behavior dropped:
+  `//:cleanNext` for `clean:next` (the Next outputs only, not
+  `//:clean`'s dists and tool caches), `//:testWatch` for the root
+  `test` (watch mode, not `vitest run`), and
+  `//apps/telegram:testUnit` for `test:telegram` (the node:test files
+  only, which is what ci.yml's apps job invokes). `dev:landing:live`
+  keeps a literal `tsup --watch` because no watch attr exists.
 
 ## API symbols used here that neither force nor optimism uses
 

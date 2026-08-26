@@ -18,7 +18,9 @@ const files =
 
 let failures = 0;
 for (const file of files) {
-  const parsed = buildPlanSchema.safeParse(JSON.parse(readFileSync(file, "utf8")));
+  const parsed = buildPlanSchema.safeParse(
+    JSON.parse(readFileSync(file, "utf8")),
+  );
   if (!parsed.success) {
     console.error(`${file}: ${parsed.error.message}`);
     failures++;

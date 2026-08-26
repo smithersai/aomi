@@ -15,7 +15,7 @@
     "typecheck": "npx smithers //apps/telegram:typeCheck",
     "lint": "npx smithers //apps/telegram:lint",
     "test": "npx smithers //apps/telegram:test",
-    "test:unit": "node --test test/*.test.mjs",
+    "test:unit": "npx smithers //apps/telegram:testUnit",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
     "clean": "rm -rf node_modules .next"
   },

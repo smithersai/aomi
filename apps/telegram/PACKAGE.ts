@@ -47,6 +47,13 @@ const test = S.Shell.Test({
   data: [srcs, S.file("//vitest.config.ts"), S.file("//vitest.setup.ts")],
 });
 
+// test:unit alone: the node:test files, no vitest. //package.json's
+// test:telegram delegates here, and CI invokes that script.
+const testUnit = S.Shell.Test({
+  command: "node --test test/*.test.mjs",
+  data: [S.glob(["test/**"])],
+});
+
 const typeCheck = S.Shell.Test({
   bin: S.NodeModule.Bin("typescript", "tsc"),
   args: ["--noEmit"],
@@ -54,5 +61,5 @@ const typeCheck = S.Shell.Test({
 });
 
 export const Package = S.Package({
-  targets: { build, deploy, dev, lint, srcs, test, typeCheck },
+  targets: { build, deploy, dev, lint, srcs, test, testUnit, typeCheck },
 });

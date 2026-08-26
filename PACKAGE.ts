@@ -204,6 +204,12 @@ const cleanApps = S.Clean({
   paths: ["apps/landing/.next", "apps/base/.next"],
 });
 
+// clean:next in //package.json: the Next build outputs only, never the
+// package dists or the tool caches //:clean also removes.
+const cleanNext = S.Clean({
+  paths: [".next", "apps/landing/.next", "apps/base/.next"],
+});
+
 const cleanPackages = S.Clean({
   targets: [client.build, react.build, deploy.build, shadcnRegistry.build],
   paths: ["dist"],
@@ -330,6 +336,7 @@ export const Package = S.Package({
     ci,
     clean,
     cleanApps,
+    cleanNext,
     cleanPackages,
     commit,
     deployRegistry,
