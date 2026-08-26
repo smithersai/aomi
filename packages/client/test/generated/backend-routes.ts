@@ -71,7 +71,7 @@ export const AOMI_BACKEND_ENDPOINTS = [
   {
     method: "DELETE",
     path: "/api/threads/:thread_id",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "GET",
@@ -96,11 +96,6 @@ export const AOMI_BACKEND_ENDPOINTS = [
   {
     method: "GET",
     path: "/api/account/bots",
-    auth: ["account"],
-  },
-  {
-    method: "GET",
-    path: "/api/account/grants",
     auth: ["account"],
   },
   {
@@ -131,11 +126,6 @@ export const AOMI_BACKEND_ENDPOINTS = [
   {
     method: "GET",
     path: "/api/account/usage",
-    auth: ["account"],
-  },
-  {
-    method: "GET",
-    path: "/api/account/wallets",
     auth: ["account"],
   },
   {
@@ -441,27 +431,27 @@ export const AOMI_BACKEND_ENDPOINTS = [
   {
     method: "GET",
     path: "/api/threads",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "GET",
     path: "/api/threads/:thread_id",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "GET",
     path: "/api/widget/v1/aa-operations/:operation_id",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "GET",
     path: "/api/widget/v1/execution-profile",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "GET",
     path: "/api/widget/v1/signing-requests",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "GET",
@@ -486,17 +476,12 @@ export const AOMI_BACKEND_ENDPOINTS = [
   {
     method: "PATCH",
     path: "/api/threads/:thread_id",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "POST",
     path: "/api/_internal/secrets",
     auth: ["service"],
-  },
-  {
-    method: "POST",
-    path: "/api/aa/v1/:chain_slug",
-    auth: ["thread"],
   },
   {
     method: "POST",
@@ -516,6 +501,26 @@ export const AOMI_BACKEND_ENDPOINTS = [
   {
     method: "POST",
     path: "/api/account/bots",
+    auth: ["account"],
+  },
+  {
+    method: "POST",
+    path: "/api/account/onchain-policies/:provider/attach/confirm",
+    auth: ["account"],
+  },
+  {
+    method: "POST",
+    path: "/api/account/onchain-policies/:provider/attach/prepare",
+    auth: ["account"],
+  },
+  {
+    method: "POST",
+    path: "/api/account/onchain-policies/:provider/revoke/confirm",
+    auth: ["account"],
+  },
+  {
+    method: "POST",
+    path: "/api/account/onchain-policies/:provider/revoke/prepare",
     auth: ["account"],
   },
   {
@@ -581,7 +586,7 @@ export const AOMI_BACKEND_ENDPOINTS = [
   {
     method: "POST",
     path: "/api/exec/run",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "POST",
@@ -591,7 +596,12 @@ export const AOMI_BACKEND_ENDPOINTS = [
   {
     method: "POST",
     path: "/api/exec/tool-call",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
+  },
+  {
+    method: "POST",
+    path: "/api/integrations/github-app/oauth/claim",
+    auth: ["service"],
   },
   {
     method: "POST",
@@ -706,12 +716,12 @@ export const AOMI_BACKEND_ENDPOINTS = [
   {
     method: "POST",
     path: "/api/system",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "POST",
     path: "/api/thread/chat",
-    auth: ["thread","app_gate"],
+    auth: ["thread", "app_gate"],
   },
   {
     method: "POST",
@@ -736,17 +746,17 @@ export const AOMI_BACKEND_ENDPOINTS = [
   {
     method: "POST",
     path: "/api/threads/:thread_id/archive",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "POST",
     path: "/api/threads/:thread_id/unarchive",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "POST",
     path: "/api/widget/v1/signing-requests/:request_id",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
   {
     method: "PUT",
@@ -776,6 +786,6 @@ export const AOMI_BACKEND_ENDPOINTS = [
   {
     method: "PUT",
     path: "/api/widget/v1/aa-accounts/:chain_id",
-    auth: ["account","thread"],
+    auth: ["account", "thread"],
   },
 ] as const satisfies readonly AomiEndpointSpec[];

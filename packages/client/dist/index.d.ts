@@ -315,20 +315,100 @@ interface AomiUser {
     created_at?: number;
     updated_at?: number;
 }
-interface AomiAuthIdentity {
+type AomiChainKind = "evm" | "svm";
+type AomiAccountRecordStatus = "provisioning" | "active" | "expired" | "revoked" | "unavailable";
+interface AomiOnchainAddress {
+    chain: AomiChainKind;
+    address: string;
+}
+interface AomiAuthProvider {
     id: number;
-    application?: string | null;
-    wallet_provider: string;
-    auth_method: string;
-    auth_verified_at?: number | null;
+    provider: string;
+    method: string;
+    verified_at?: number | null;
     is_primary: boolean;
     created_at: number;
 }
-interface AomiIdentityWallet {
-    wallet_id?: string | null;
-    address: string;
-    chain_type: string;
-    wallet_provider: string;
+interface AomiSigningAuthorization {
+    address: AomiOnchainAddress;
+    provider?: string | null;
+    mode: "auto" | "manual" | "client_auto" | "denied";
+    version: number;
+    is_primary: boolean;
+    provider_managed: boolean;
+    can_use_auto: boolean;
+    last_authorized_at?: number | null;
+    last_authorized_by?: AomiOnchainAddress | null;
+}
+interface AomiDelegatedAccount {
+    id: number;
+    address: AomiOnchainAddress;
+    provider: string;
+    kind: string;
+    status: AomiAccountRecordStatus;
+    created_at: number;
+    updated_at: number;
+    expires_at?: number | null;
+    revoked_at?: number | null;
+    revocation_reason?: string | null;
+}
+interface AomiOperatingAccount {
+    id: number;
+    owner: AomiOnchainAddress;
+    operating: AomiOnchainAddress;
+    chain_ref: string;
+    provider: string;
+    kind: string;
+    status: AomiAccountRecordStatus;
+    version: number;
+    created_at: number;
+    updated_at: number;
+}
+type AomiPolicyWindow = {
+    unit: "slots";
+    value: number;
+} | {
+    unit: "blocks";
+    value: number;
+} | {
+    unit: "seconds";
+    value: number;
+};
+type AomiOnchainPolicyRule = {
+    type: "allowed_call_target";
+    target: AomiOnchainAddress;
+} | {
+    type: "lifetime_native_asset_limit";
+    amount: string;
+} | {
+    type: "recurring_native_asset_limit";
+    amount: string;
+    window: AomiPolicyWindow;
+};
+interface AomiOnchainPolicy {
+    version: number;
+    rules: AomiOnchainPolicyRule[];
+}
+type AomiProviderBinding = {
+    provider: "swig";
+    binding: {
+        swig_account: AomiOnchainAddress;
+        role_id: number;
+    };
+};
+interface AomiOnchainPolicyBinding {
+    id: number;
+    owner: AomiOnchainAddress;
+    delegate: AomiOnchainAddress;
+    operating_account: AomiOperatingAccount;
+    provider: string;
+    policy: AomiOnchainPolicy;
+    provider_binding: AomiProviderBinding;
+    status: AomiAccountRecordStatus;
+    created_at: number;
+    updated_at: number;
+    confirmed_at?: number | null;
+    revoked_at?: number | null;
 }
 interface AomiUsageStats {
     period_utc_month?: string;
@@ -339,9 +419,13 @@ interface AomiUsageStats {
 }
 interface AomiAccountProfile {
     user: AomiUser;
-    auth_identities?: AomiAuthIdentity[];
-    identity_wallets?: AomiIdentityWallet[];
-    usage?: AomiUsageStats;
+    auth_providers: AomiAuthProvider[];
+    usage: AomiUsageStats;
+    onchain_addresses: AomiOnchainAddress[];
+    signing_authorizations: AomiSigningAuthorization[];
+    delegated_accounts: AomiDelegatedAccount[];
+    operating_accounts: AomiOperatingAccount[];
+    onchain_policy_bindings: AomiOnchainPolicyBinding[];
 }
 interface AomiCreateApprovalRequest {
     auth_identity_id: number;
@@ -1982,4 +2066,4 @@ declare function appendFeeCallToPayload(payload: WalletTxPayload, fee: AomiSimul
     strictAa?: boolean;
 }): WalletTxPayload;
 
-export { type AACallPayload, type AAMode, type AASponsorship, type AAWalletCall, ALCHEMY_CHAIN_SLUGS, AOMI_TASK_EVENT_TYPES, type AccountBearerProvider, type AccountBearerProviderOptions, type AccountCredentialProvider, AccountCredentialUnavailableError, type AccountSessionExchangeResponse, type AomiAccessApproval, type AomiAccountProfile, type AomiAccountResponse, type AomiAppDescriptor, type AomiArtifactStatus, type AomiAuthIdentity, type AomiAuthPurpose, type AomiAuthorizationChallenge, type AomiAuthorizationPermit, type AomiAuthorizationState, type AomiChatResponse, type AomiClearSecretsResponse, AomiClient, type AomiClientOptions, type AomiClientType, type AomiCreateApprovalRequest, type AomiCreateThreadResponse, type AomiDeleteSecretResponse, type AomiEnsureBoundResult, type AomiHttpMethod, type AomiIdentityWallet, type AomiIngestSecretsResponse, type AomiInterruptResponse, type AomiListSecretsResponse, type AomiMessage, type AomiPlatformFilter, type AomiRequestOptions, type AomiRequestQueryValue, type AomiSSEEvent, type AomiSSEEventType, type AomiSecretSlot, type AomiSimulateFee, type AomiSimulateResponse, type AomiStateResponse, type AomiSystemEvent, type AomiSystemResponse, type AomiTaskActivityEvent, type AomiTaskActivityKind, type AomiTaskCompletedEvent, type AomiTaskEvent, type AomiTaskEventType, type AomiTaskStartedEvent, type AomiTaskStatus, type AomiThread, type AomiUsageStats, type AomiUser, type AomiWalletFamily, type ApplicationId, type AtomicBatchArgs, type AuthorizationPoster, type BetterAuthAccountTokenSourceOptions, type BetterAuthTokenResponse, CHAINS_BY_ID, CHAIN_NAMES, CLIENT_TYPE_TS_CLI, CLIENT_TYPE_WEB_UI, type ChainInfo, type ExecuteWalletCallsParams, type ExecutionResult, type GetAccountBearer, type Logger, MAX_AUTO_FEE_WEI, type NativeWalletExecutionPolicy, type NativeWalletSponsorship, type NormalizedSimulatedFee, type NormalizedSolanaWalletRequest, type OwnedUserState, type PartialWalletExecution, PartialWalletExecutionError, type ProviderCredential, SUPPORTED_CHAINS, SUPPORTED_CHAIN_IDS, type SendResult, ClientSession as Session, type SessionEventMap, type SessionOptions, type SiwsChainId, type SiwsIntent, type SiwsWidgetSessionSigner, type SponsorshipPaymasterServiceContext, TypedEventEmitter, type UnwrappedEvent, UserState, type UserStateAAMode, type UserStateAuthMethod, type UserStateWalletProvider, type ViemSignMessageArgs, type ViemSignTypedDataArgs, type WalletAtomicCapability, type WalletCapabilities, type WalletEip712Payload, type WalletRequest, type WalletRequestKind, type WalletRequestResult, type WalletSignablePayload, type WalletSigningPayload, type WalletSolanaSignMessagePayload, type WalletSolanaSignPayload, type WalletTxAaPreference, type WalletTxCallPayload, type WalletTxPayload, type WidgetAuthAdapter, type WidgetAuthSession, WidgetChallengeBindingError, type WidgetSession, type WidgetSessionProvider, type WidgetSessionSigner, aaModeFromExecutionKind, appIdentityKey, appendFeeCallToPayload, arcTestnet, authorizationChallenge, authorizationCommit, buildFeeAAWalletCall, buildSiwsMessage, createAccountBearerProvider, createProviderCredentialAdapter, createSiweWidgetAuthAdapter, createSiwsWidgetAuthAdapter, createWidgetSessionProvider, ensureSvmWalletBound, ensureSvmWalletBoundVia, executeWalletCalls, handlePaymentChallenges, hydrateTxPayloadFromUserState, isAomiTaskEventType, isAsyncCallback, isInlineCall, isSystemError, isSystemNotice, isUnboundWalletError, megaeth, monad, monadTestnet, normalizeAppDescriptor, normalizeEip712Payload, normalizeSimulatedFee, normalizeSolanaCluster, normalizeSolanaSignMessagePayload, normalizeSolanaSignPayload, normalizeSolanaWalletRequest, normalizeTxPayload, parseAomiTaskEvent, parseChainId, partialWalletExecution, posterFromClient, robinhood, safeEnv, secretNamesFrom, toAAWalletCall, toAAWalletCalls, toViemSignMessageArgs, toViemSignTypedDataArgs, unwrapSystemEvent, wrapFetchWithPaymentChallenges };
+export { type AACallPayload, type AAMode, type AASponsorship, type AAWalletCall, ALCHEMY_CHAIN_SLUGS, AOMI_TASK_EVENT_TYPES, type AccountBearerProvider, type AccountBearerProviderOptions, type AccountCredentialProvider, AccountCredentialUnavailableError, type AccountSessionExchangeResponse, type AomiAccessApproval, type AomiAccountProfile, type AomiAccountRecordStatus, type AomiAccountResponse, type AomiAppDescriptor, type AomiArtifactStatus, type AomiAuthProvider, type AomiAuthPurpose, type AomiAuthorizationChallenge, type AomiAuthorizationPermit, type AomiAuthorizationState, type AomiChainKind, type AomiChatResponse, type AomiClearSecretsResponse, AomiClient, type AomiClientOptions, type AomiClientType, type AomiCreateApprovalRequest, type AomiCreateThreadResponse, type AomiDelegatedAccount, type AomiDeleteSecretResponse, type AomiEnsureBoundResult, type AomiHttpMethod, type AomiIngestSecretsResponse, type AomiInterruptResponse, type AomiListSecretsResponse, type AomiMessage, type AomiOnchainAddress, type AomiOnchainPolicy, type AomiOnchainPolicyBinding, type AomiOnchainPolicyRule, type AomiOperatingAccount, type AomiPlatformFilter, type AomiPolicyWindow, type AomiProviderBinding, type AomiRequestOptions, type AomiRequestQueryValue, type AomiSSEEvent, type AomiSSEEventType, type AomiSecretSlot, type AomiSigningAuthorization, type AomiSimulateFee, type AomiSimulateResponse, type AomiStateResponse, type AomiSystemEvent, type AomiSystemResponse, type AomiTaskActivityEvent, type AomiTaskActivityKind, type AomiTaskCompletedEvent, type AomiTaskEvent, type AomiTaskEventType, type AomiTaskStartedEvent, type AomiTaskStatus, type AomiThread, type AomiUsageStats, type AomiUser, type AomiWalletFamily, type ApplicationId, type AtomicBatchArgs, type AuthorizationPoster, type BetterAuthAccountTokenSourceOptions, type BetterAuthTokenResponse, CHAINS_BY_ID, CHAIN_NAMES, CLIENT_TYPE_TS_CLI, CLIENT_TYPE_WEB_UI, type ChainInfo, type ExecuteWalletCallsParams, type ExecutionResult, type GetAccountBearer, type Logger, MAX_AUTO_FEE_WEI, type NativeWalletExecutionPolicy, type NativeWalletSponsorship, type NormalizedSimulatedFee, type NormalizedSolanaWalletRequest, type OwnedUserState, type PartialWalletExecution, PartialWalletExecutionError, type ProviderCredential, SUPPORTED_CHAINS, SUPPORTED_CHAIN_IDS, type SendResult, ClientSession as Session, type SessionEventMap, type SessionOptions, type SiwsChainId, type SiwsIntent, type SiwsWidgetSessionSigner, type SponsorshipPaymasterServiceContext, TypedEventEmitter, type UnwrappedEvent, UserState, type UserStateAAMode, type UserStateAuthMethod, type UserStateWalletProvider, type ViemSignMessageArgs, type ViemSignTypedDataArgs, type WalletAtomicCapability, type WalletCapabilities, type WalletEip712Payload, type WalletRequest, type WalletRequestKind, type WalletRequestResult, type WalletSignablePayload, type WalletSigningPayload, type WalletSolanaSignMessagePayload, type WalletSolanaSignPayload, type WalletTxAaPreference, type WalletTxCallPayload, type WalletTxPayload, type WidgetAuthAdapter, type WidgetAuthSession, WidgetChallengeBindingError, type WidgetSession, type WidgetSessionProvider, type WidgetSessionSigner, aaModeFromExecutionKind, appIdentityKey, appendFeeCallToPayload, arcTestnet, authorizationChallenge, authorizationCommit, buildFeeAAWalletCall, buildSiwsMessage, createAccountBearerProvider, createProviderCredentialAdapter, createSiweWidgetAuthAdapter, createSiwsWidgetAuthAdapter, createWidgetSessionProvider, ensureSvmWalletBound, ensureSvmWalletBoundVia, executeWalletCalls, handlePaymentChallenges, hydrateTxPayloadFromUserState, isAomiTaskEventType, isAsyncCallback, isInlineCall, isSystemError, isSystemNotice, isUnboundWalletError, megaeth, monad, monadTestnet, normalizeAppDescriptor, normalizeEip712Payload, normalizeSimulatedFee, normalizeSolanaCluster, normalizeSolanaSignMessagePayload, normalizeSolanaSignPayload, normalizeSolanaWalletRequest, normalizeTxPayload, parseAomiTaskEvent, parseChainId, partialWalletExecution, posterFromClient, robinhood, safeEnv, secretNamesFrom, toAAWalletCall, toAAWalletCalls, toViemSignMessageArgs, toViemSignTypedDataArgs, unwrapSystemEvent, wrapFetchWithPaymentChallenges };

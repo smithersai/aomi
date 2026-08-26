@@ -1,5 +1,14 @@
 # Canonical Landing
 
+Current session goal: **CANONICAL CROSS-CHAIN ACCOUNT MODEL IMPLEMENTED AND
+LOCALLY VERIFIED 2026-08-26** — portal account settings and the TypeScript
+client consume the single `GET /api/account` `AccountWithDelegation` response.
+Legacy wallet/grant routes and fields are removed from consumers while signing
+mode changes, exact-address delegation history, revoke/regrant, Para agent
+provisioning, drift warnings, and SVM binding remain intact. Portal tests,
+typecheck, focused ESLint/Prettier, client build, and generated OpenAPI contract
+checks pass. No package was published and no hosted database was changed.
+
 Current session goal: **NON-HOMEPAGE GTM COPY ALIGNMENT VERIFIED 2026-08-26**
 — updated the approved language across About, Human Interface, Agent Toolings,
 REST APIs, Plugin SDK, Trading, DeFi, Fintech, Wallets, and Contact while
@@ -66,7 +75,6 @@ around the Human Interface demo, stop global pressed-button styling from leaking
 into widget traces, keep the footer mark and wordmark the same color, and restore
 Sign-stage text contrast in dark mode. Verified in Playwright in light and dark
 themes at desktop and 390px widths; landing lint and production build pass.
-
 Current session goal: **CANONICAL LANDING IMPLEMENTATION CLEANUP VERIFIED
 2026-08-25** — remove migration-era version names and generated-export
 scaffolding from the one production landing implementation, give every retained

@@ -9534,12 +9534,11 @@ async function accountWhoamiCommand(config) {
     }
     if (user.tier) console.log(`Tier:     ${user.tier}`);
     if (user.status) console.log(`Status:   ${user.status}`);
-    const wallets = (_b = account.identity_wallets) != null ? _b : [];
-    console.log(`Wallets:  ${wallets.length}`);
-    for (const wallet of wallets) {
-      const walletId = wallet.wallet_id ? ` (${wallet.wallet_id})` : "";
+    const authorizations = account.signing_authorizations;
+    console.log(`Wallets:  ${authorizations.length}`);
+    for (const authorization of authorizations) {
       console.log(
-        `- ${formatWalletChainType(wallet.chain_type)} [${wallet.wallet_provider}]: ${wallet.address}${walletId}`
+        `- ${formatWalletChainType(authorization.address.chain)} [${(_b = authorization.provider) != null ? _b : "self-custody"}]: ${authorization.address.address}`
       );
     }
     printDataFileLocation({ verbose: config.verbose });
@@ -11665,7 +11664,7 @@ init_shared();
 // package.json
 var package_default = {
   name: "@aomi-labs/client",
-  version: "0.6.3",
+  version: "0.6.4",
   description: "Platform-agnostic TypeScript client for the Aomi backend API",
   type: "module",
   main: "./dist/index.cjs",
