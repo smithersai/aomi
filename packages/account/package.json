@@ -19,7 +19,7 @@
     "./widget-auth": "./src/widget-auth/index.ts"
   },
   "scripts": {
-    "type-check": "tsc --noEmit"
+    "type-check": "npx smithers //packages/account:typeCheck"
   },
   "engines": {
     "node": ">=18"

@@ -64,7 +64,7 @@
     "skills"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "npx smithers //packages/deploy:build",
     "clean:dist": "rm -rf dist"
   },
   "engines": {

@@ -6,11 +6,11 @@
   "description": "Landing page and docs for @aomi-labs/react",
   "scripts": {
     "postinstall": "fumadocs-mdx",
-    "dev": "next dev",
+    "dev": "npx smithers //apps/landing:dev",
     "dev:localhost": "NEXT_PUBLIC_ANVIL_FOR_WALLET=true next dev",
-    "build": "next build",
+    "build": "npx smithers //apps/landing:build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "npx smithers //apps/landing:lint",
     "clean:next": "rm -rf .next",
     "clean:all": "rm -rf .next node_modules",
     "clean": "rm -rf .next node_modules"

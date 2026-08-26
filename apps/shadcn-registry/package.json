@@ -38,9 +38,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm run build:registry && pnpm run build:package",
-    "build:registry": "tsx scripts/build-registry.js",
-    "build:package": "tsup && node scripts/build-package-css.mjs",
+    "build": "npx smithers //apps/shadcn-registry:build",
     "clean:dist": "rm -rf dist",
     "prepublishOnly": "pnpm run build"
   },

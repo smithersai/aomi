@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "type-check": "tsc --noEmit"
+    "type-check": "npx smithers //packages/service:typeCheck"
   },
   "engines": {
     "node": ">=18"

@@ -4,12 +4,12 @@
   "private": true,
   "packageManager": "pnpm@10.28.0",
   "scripts": {
-    "dev": "next dev",
-    "build": "pnpm --filter \"@aomi-labs/smither...\" build && next build",
+    "dev": "npx smithers //apps/build:dev",
+    "build": "npx smithers //apps/build:build",
     "start": "next start",
-    "lint": "eslint .",
-    "type-check": "next typegen && tsc --noEmit --incremental false",
-    "test": "node scripts/run-tests.mjs --passWithNoTests",
+    "lint": "npx smithers //apps/build:lint",
+    "type-check": "npx smithers //apps/build:typeCheck",
+    "test": "npx smithers //apps/build:test",
     "clean:next": "rm -rf .next",
     "clean": "rm -rf .next node_modules"
   },

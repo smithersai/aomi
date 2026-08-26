@@ -8,13 +8,13 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "npx smithers //apps/telegram:dev",
     "dev:webpack": "next dev --no-turbopack",
-    "build": "next build",
+    "build": "npx smithers //apps/telegram:build",
     "start": "next start",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "test": "pnpm --dir ../.. exec vitest run apps/telegram/src && node --test test/*.test.mjs",
+    "typecheck": "npx smithers //apps/telegram:typeCheck",
+    "lint": "npx smithers //apps/telegram:lint",
+    "test": "npx smithers //apps/telegram:test",
     "test:unit": "node --test test/*.test.mjs",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
     "clean": "rm -rf node_modules .next"

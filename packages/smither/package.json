@@ -26,7 +26,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "npx smithers //packages/smither:build",
     "clean:dist": "rm -rf dist"
   },
   "engines": {

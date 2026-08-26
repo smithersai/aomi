@@ -5,14 +5,14 @@
   "packageManager": "pnpm@10.28.0",
   "description": "Aomi",
   "scripts": {
-    "dev": "next dev --webpack --disable-source-maps --hostname 0.0.0.0",
+    "dev": "npx smithers //apps/base:dev",
     "dev:3000": "next dev --webpack --disable-source-maps --hostname 0.0.0.0 --port 3000",
     "dev:3001": "next dev --webpack --disable-source-maps --hostname 0.0.0.0 --port 3001",
     "dev:ngrok": "./scripts/dev-ngrok.sh",
-    "build": "next build",
+    "build": "npx smithers //apps/base:build",
     "start": "next start",
     "start:3000": "next start --hostname 0.0.0.0 --port 3000",
-    "lint": "eslint ."
+    "lint": "npx smithers //apps/base:lint"
   },
   "dependencies": {
     "@aomi-labs/account": "workspace:*",
