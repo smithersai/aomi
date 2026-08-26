@@ -73,3 +73,6 @@ next-env.d.ts
 # Recorded demo masters — regenerable build artifacts, not source
 /demo/out/
 /.surfpool/
+
+# Smithers target cache
+/.flows
