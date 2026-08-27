@@ -21,7 +21,15 @@ const updateBackendOpenapi = S.Shell.Diff({
   bin: S.Runtime.bin,
   args: ["update-backend-openapi.mjs"],
   data: [srcs],
-  changes: ["//packages/client/test/fixtures/backend-openapi.json"],
+  changes: [
+    "//packages/client/test/fixtures/backend-openapi.json",
+    "//packages/client/test/fixtures/manager-openapi.json",
+    "//packages/client/test/generated/backend-routes.ts",
+  ],
+  env: {
+    AOMI_BACKEND_OPENAPI_URLS:
+      "https://api.aomi.dev/api/openapi.json,https://api-staging.aomi.dev/api/openapi.json",
+  },
   sandbox: { network: true },
 });
 

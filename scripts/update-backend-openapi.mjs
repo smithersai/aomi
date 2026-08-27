@@ -30,16 +30,41 @@ const managerTmpPath = join(repoRoot, ".tmp/manager-openapi.json");
 mkdirSync(dirname(backendTmpPath), { recursive: true });
 mkdirSync(dirname(routesPath), { recursive: true });
 
-const openApiUrl = resolveOpenApiUrl();
-const backendOpenApi = openApiUrl
-  ? await fetchOpenApi(openApiUrl)
-  : exportBackendOpenApi(resolveProductMonoRoot());
-const managerOpenApi = exportManagerOpenApi(resolveProductMonoRoot());
-const openApi = mergeOpenApi(backendOpenApi, managerOpenApi);
+const previousOpenApi = JSON.parse(readFileSync(fixturePath, "utf8"));
+const previousManagerOpenApi = JSON.parse(
+  readFileSync(managerFixturePath, "utf8"),
+);
+const openApiUrls = resolveOpenApiUrls();
+let managerOpenApi = previousManagerOpenApi;
+let generatedOpenApi;
 
-writeFileSync(fixturePath, `${JSON.stringify(openApi, null, 2)}\n`);
-writeFileSync(managerFixturePath, `${JSON.stringify(managerOpenApi, null, 2)}\n`);
-writeFileSync(routesPath, routeSourceFromOpenApi(openApi));
+if (openApiUrls.length > 0) {
+  const liveDocuments = await Promise.all(openApiUrls.map(fetchOpenApi));
+  const liveUnion = liveDocuments
+    .slice(1)
+    .reduce(
+      (combined, document) => mergeOpenApi(combined, document),
+      liveDocuments[0],
+    );
+  generatedOpenApi = mergeOpenApi(previousOpenApi, liveUnion, {
+    allowAuthChange: true,
+  });
+} else {
+  const productMonoRoot = resolveProductMonoRoot();
+  const backendOpenApi = exportBackendOpenApi(productMonoRoot);
+  managerOpenApi = exportManagerOpenApi(productMonoRoot);
+  const exportedOpenApi = mergeOpenApi(backendOpenApi, managerOpenApi);
+  generatedOpenApi = mergeOpenApi(previousOpenApi, exportedOpenApi, {
+    allowAuthChange: true,
+  });
+}
+
+writeFileSync(fixturePath, `${JSON.stringify(generatedOpenApi, null, 2)}\n`);
+writeFileSync(
+  managerFixturePath,
+  `${JSON.stringify(managerOpenApi, null, 2)}\n`,
+);
+writeFileSync(routesPath, routeSourceFromOpenApi(generatedOpenApi));
 rmSync(backendTmpPath, { force: true });
 rmSync(managerTmpPath, { force: true });
 
@@ -47,16 +72,24 @@ console.log(`Updated ${fixturePath}`);
 console.log(`Updated ${managerFixturePath}`);
 console.log(`Updated ${routesPath}`);
 
-function resolveOpenApiUrl() {
+function resolveOpenApiUrls() {
+  if (process.env.AOMI_BACKEND_OPENAPI_URLS) {
+    return process.env.AOMI_BACKEND_OPENAPI_URLS.split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+  }
+
   if (process.env.AOMI_BACKEND_OPENAPI_URL) {
-    return process.env.AOMI_BACKEND_OPENAPI_URL;
+    return [process.env.AOMI_BACKEND_OPENAPI_URL];
   }
 
   if (process.env.NEXT_PUBLIC_BACKEND_URL) {
-    return `${process.env.NEXT_PUBLIC_BACKEND_URL.replace(/\/+$/, "")}/api/openapi.json`;
+    return [
+      `${process.env.NEXT_PUBLIC_BACKEND_URL.replace(/\/+$/, "")}/api/openapi.json`,
+    ];
   }
 
-  return undefined;
+  return [];
 }
 
 async function fetchOpenApi(openApiUrl) {
@@ -128,7 +161,7 @@ function exportManagerOpenApi(productMonoRoot) {
   return JSON.parse(readFileSync(managerTmpPath, "utf8"));
 }
 
-function mergeOpenApi(backend, manager) {
+function mergeOpenApi(backend, manager, { allowAuthChange = false } = {}) {
   const paths = structuredClone(backend.paths ?? {});
   for (const [path, managerItem] of Object.entries(manager.paths ?? {})) {
     const target = (paths[path] ??= {});
@@ -136,6 +169,7 @@ function mergeOpenApi(backend, manager) {
       const existing = target[method];
       if (
         existing &&
+        !allowAuthChange &&
         JSON.stringify(existing["x-aomi-auth"]) !==
           JSON.stringify(operation["x-aomi-auth"])
       ) {

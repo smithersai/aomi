@@ -62,6 +62,56 @@ const productionSmoke = S.Github.Workflow({
   run: [tests.productionSmoke],
 });
 
+// Release branches are cut from an explicit soaked SHA. Git ref mutation is
+// host state rather than a source-tree write, so the Diff target runs outside
+// the filesystem sandbox and declares an empty source write set.
+const releaseCut = S.Shell.Diff({
+  bin: S.Runtime.bin,
+  args: ["scripts/release-cut.mjs"],
+  data: [
+    S.file("//scripts/release-cut.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+  ],
+  changes: [],
+  sandbox: "none",
+});
+
+const hotfixDivergence = S.Shell.Test({
+  bin: S.Runtime.bin,
+  args: ["scripts/check-hotfix-divergence.mjs"],
+  data: [
+    S.file("//scripts/check-hotfix-divergence.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+  ],
+  secrets: [S.Secret("GITHUB_TOKEN")],
+  sandbox: { network: true },
+});
+
+const backmergePr = S.Agent.Pr({
+  agent: S.Agents.luna,
+  prompt: S.file("//prompts/backmerge-prod.md"),
+  data: [S.file("//GOAL.md"), S.gitDiff({ paths: ["GOAL.md", "docs/**"] })],
+  changes: ["GOAL.md", "docs/**"],
+  gates: [],
+  approval: "required",
+});
+
+const releasePr = S.Agent.Pr({
+  agent: S.Agents.luna,
+  prompt: S.file("//prompts/release-train.md"),
+  data: [S.gitDiff({ paths: ["**"] }), S.file("//GOAL.md")],
+  changes: [],
+  gates: [releaseCut, hotfixDivergence, root.frontendReleaseTrain],
+  approval: "required",
+});
+
+// secretMaterialInTree belongs to the cross-repo/top-level lane and is not
+// duplicated here. Once that target is imported, it is the remaining evidence
+// edge described in the mined release workflow.
+const releaseTrain = S.Suite({
+  tests: [releaseCut, hotfixDivergence, root.frontendReleaseTrain, releasePr],
+});
+
 // The drift-checked renderer. Hand-written workflows without target
 // equivalents are preserved: the two manual npm publish pipelines, the
 // manual rollback, and the nightly preview fallback.
@@ -84,5 +134,17 @@ const pr = S.Github.Pr({
 });
 
 export const Package = S.Package({
-  targets: { ci, github, pr, previewE2e, productionSmoke, workflowPolicy },
+  targets: {
+    backmergePr,
+    ci,
+    github,
+    hotfixDivergence,
+    pr,
+    previewE2e,
+    productionSmoke,
+    releaseCut,
+    releasePr,
+    releaseTrain,
+    workflowPolicy,
+  },
 });

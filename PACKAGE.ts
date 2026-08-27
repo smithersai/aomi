@@ -117,7 +117,16 @@ const bffRouteContract = S.Shell.Test({
 const bffRouteContractFix = S.Shell.Diff({
   bin: S.Runtime.bin,
   args: ["scripts/check-bff-routes.mjs", "--fix"],
-  data: [bffRouteContract],
+  data: [
+    S.file("//scripts/check-bff-routes.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+    S.glob([
+      "apps/portal/src/app/api/**/route.ts",
+      "apps/portal/src/server/bff/**",
+      "apps/build/src/app/api/**/route.ts",
+      "apps/build/src/server/bff/**",
+    ]),
+  ],
   changes: ["apps/*/src/app/api/**/route.ts"],
 });
 
@@ -510,6 +519,51 @@ const openapiLive = S.Shell.Test({
   sandbox: { network: true },
 });
 
+const openapiFixtureUnion = S.Shell.Test({
+  bin: S.Runtime.bin,
+  args: ["scripts/check-openapi-fixture-union.mjs"],
+  data: [
+    S.file("//scripts/check-openapi-fixture-union.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+    S.gitDiff({
+      paths: [
+        "packages/client/test/fixtures/*.json",
+        "packages/client/test/generated/backend-routes.ts",
+      ],
+    }),
+  ],
+});
+
+const fixturePr = S.Agent.Pr({
+  agent: S.Agents.luna,
+  prompt: S.file("//prompts/fixture-refresh.md"),
+  data: [
+    repoScripts.updateBackendOpenapi,
+    S.gitDiff({
+      paths: [
+        "packages/client/test/fixtures/*.json",
+        "packages/client/test/generated/backend-routes.ts",
+      ],
+    }),
+  ],
+  changes: [
+    "packages/client/test/fixtures/**",
+    "packages/client/test/generated/**",
+  ],
+  gates: [openapiFixtureUnion, openapiContract, openapiLive],
+  approval: "required",
+});
+
+const contractFixtureRefresh = S.Suite({
+  tests: [
+    repoScripts.updateBackendOpenapi,
+    openapiFixtureUnion,
+    openapiContract,
+    openapiLive,
+    fixturePr,
+  ],
+});
+
 const typeCheck = S.Shell.Test({
   bin: S.NodeModule.Bin("typescript", "tsc"),
   args: ["--noEmit", "--project", "tsconfig.lib.json"],
@@ -547,6 +601,14 @@ const ci = S.Suite({
     agentLints,
     deterministicLints,
   ],
+});
+
+// The tree-verification half of //.github:releaseTrain lives at the root so
+// it is reusable without importing .github back into this package (which would
+// create a declaration cycle). Git ref mutation and PR creation stay in the
+// .github package.
+const frontendReleaseTrain = S.Suite({
+  tests: [ci, openapiLive, publishCoherence, registryBuildIntegrity],
 });
 
 const clean = S.Clean({
@@ -658,6 +720,36 @@ const publish = S.Shell.Run({
   approval: "required",
 });
 
+// A registry release is complete only when the deployed item installs into a
+// clean Next app and survives both tsc and next build.
+const installSmoke = S.Shell.Test({
+  bin: S.Runtime.bin,
+  args: ["scripts/smoke-registry-install.mjs"],
+  data: [
+    shadcnRegistry.build,
+    S.file("//scripts/smoke-registry-install.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+    S.gitDiff({ paths: ["apps/shadcn-registry/src/**"] }),
+  ],
+  // Run targets cannot be data producers: the loader rejects that edge.
+  // A gate preserves the required deploy-before-install order and keeps the
+  // real deployment's approval visible.
+  gates: [deployRegistry],
+  sandbox: { network: true },
+});
+
+const registryRelease = S.Suite({
+  tests: [
+    shadcnRegistry.build,
+    registryBuildIntegrity,
+    registryParityLint,
+    releaseFanout,
+    publish,
+    deployRegistry,
+    installSmoke,
+  ],
+});
+
 const themeGen = S.Generate({
   script: S.file("//scripts/generate-theme.mjs"),
   data: [S.glob(["src/themes/**"])],
@@ -707,6 +799,7 @@ export const Package = S.Package({
     cleanPackages,
     cliRegistrationParity,
     commit,
+    contractFixtureRefresh,
     deployRegistry,
     deployContractExtension,
     deployStatusExhaustive,
@@ -714,9 +807,13 @@ export const Package = S.Package({
     engineNamesLint,
     envKeyParity,
     failClosedAuthorization,
+    fixturePr,
+    frontendReleaseTrain,
+    installSmoke,
     lint,
     lintApps,
     openapiContract,
+    openapiFixtureUnion,
     openapiLive,
     paymasterForwardedHost,
     postCommit,
@@ -728,6 +825,7 @@ export const Package = S.Package({
     publishCoherence,
     registryBuildIntegrity,
     registryParityLint,
+    registryRelease,
     releaseFanout,
     repowiki,
     repowikiDoctor,
