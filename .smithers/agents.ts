@@ -9,4 +9,5 @@ export const agents = S.Agents({
   default: S.Agent.ClaudeCode({ model: "moonshotai/kimi-k2.7-code" }),
   luna: S.Agent.Codex({ model: "luna" }),
   reviewPool: S.Agent.Pool(["luna", "default"]),
+  sol: S.Agent.Codex({ model: "sol" }),
 });

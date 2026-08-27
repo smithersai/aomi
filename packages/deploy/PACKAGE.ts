@@ -11,6 +11,12 @@ const build = S.Shell.Build({
   outDirs: ["dist"],
 });
 
+const test = S.Shell.Test({
+  bin: S.NodeModule.Bin("vitest"),
+  args: ["run", "packages/deploy/test"],
+  data: [srcs, S.file("//vitest.config.ts"), S.file("//vitest.setup.ts")],
+});
+
 export const Package = S.Package({
-  targets: { build, srcs },
+  targets: { build, srcs, test },
 });

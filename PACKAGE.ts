@@ -11,6 +11,7 @@ import { Package as client } from "./packages/client/PACKAGE.js";
 import { Package as deploy } from "./packages/deploy/PACKAGE.js";
 import { Package as react } from "./packages/react/PACKAGE.js";
 import { Package as service } from "./packages/service/PACKAGE.js";
+import { Package as repoScripts } from "./scripts/PACKAGE.js";
 
 const packageJson = S.file("//package.json");
 
@@ -93,6 +94,125 @@ const lintApps = S.Suite({
   tests: [landing.lint, base.lint, portal.lint, build.lint, telegram.lint],
 });
 
+// Deterministic PR-history lints. Each script scans the current tree, prints
+// path:line findings (or {findings:[...]} with --json), and stays silent when
+// clean so a cached green target remains legible.
+const bffRouteContract = S.Shell.Test({
+  bin: S.Runtime.bin,
+  args: ["scripts/check-bff-routes.mjs"],
+  data: [
+    S.file("//scripts/check-bff-routes.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+    S.glob([
+      "apps/portal/src/app/api/**/route.ts",
+      "apps/portal/src/server/bff/**",
+      "apps/build/src/app/api/**/route.ts",
+      "apps/build/src/server/bff/**",
+    ]),
+  ],
+});
+
+// The runtime declaration is syntax-only and therefore safe to repair
+// mechanically. Origin/authorization findings remain report-only.
+const bffRouteContractFix = S.Shell.Diff({
+  bin: S.Runtime.bin,
+  args: ["scripts/check-bff-routes.mjs", "--fix"],
+  data: [bffRouteContract],
+  changes: ["apps/*/src/app/api/**/route.ts"],
+});
+
+const deployStatusExhaustive = S.Shell.Test({
+  bin: S.Runtime.bin,
+  args: ["scripts/check-deploy-states.mjs"],
+  data: [
+    S.file("//scripts/check-deploy-states.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+    S.file("//packages/deploy/src/types.ts"),
+    S.glob([
+      "apps/portal/src/features/launch/**",
+      "apps/build/src/features/launch/**",
+    ]),
+  ],
+});
+
+const envKeyParity = S.Shell.Test({
+  bin: S.Runtime.bin,
+  args: ["scripts/check-env-parity.mjs"],
+  data: [
+    S.file("//scripts/check-env-parity.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+    S.glob([
+      "apps/*/src/**",
+      "apps/*/app/**",
+      "apps/*/.env.example",
+      "apps/*/LOCAL_ENV.example",
+    ]),
+  ],
+});
+
+const paymasterForwardedHost = S.Shell.Test({
+  bin: S.Runtime.bin,
+  args: ["scripts/check-forwarded-origin.mjs"],
+  data: [
+    S.file("//scripts/check-forwarded-origin.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+    S.glob(["apps/*/app/api/**/route.ts", "apps/*/src/app/api/**/route.ts"]),
+  ],
+});
+
+const publishCoherence = S.Shell.Test({
+  bin: S.Runtime.bin,
+  args: ["scripts/check-publish-coherence.mjs"],
+  data: [
+    S.file("//scripts/check-publish-coherence.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+    S.glob([
+      "packages/*/package.json",
+      "apps/shadcn-registry/package.json",
+      "scripts/publish-package-if-needed.mjs",
+    ]),
+  ],
+  sandbox: { network: true },
+});
+
+const registryBuildIntegrity = S.Shell.Test({
+  bin: S.Runtime.bin,
+  args: ["scripts/check-registry-integrity.mjs"],
+  data: [
+    shadcnRegistry.build,
+    S.file("//scripts/check-registry-integrity.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+    S.glob([
+      "apps/shadcn-registry/src/**",
+      "apps/shadcn-registry/scripts/build-registry.js",
+      "apps/landing/public/r/**",
+    ]),
+  ],
+});
+
+const singleInstanceProviderSdk = S.Shell.Test({
+  bin: S.Runtime.bin,
+  args: ["scripts/check-provider-sdk-dupes.mjs"],
+  data: [
+    S.file("//scripts/check-provider-sdk-dupes.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+    S.file("//pnpm-lock.yaml"),
+    S.glob(["apps/*/package.json", "packages/*/package.json"]),
+  ],
+});
+
+const deterministicLints = S.Suite({
+  tests: [
+    bffRouteContract,
+    deployStatusExhaustive,
+    envKeyParity,
+    paymasterForwardedHost,
+    publishCoherence,
+    registryBuildIntegrity,
+    singleInstanceProviderSdk,
+  ],
+});
+
 // Judgment lints. registryParity enforces the AGENTS.md publish rules that
 // prose cannot: shipped files appear in the registry manifest and versions
 // bump in the same change. secretHygiene enforces the secret-handling
@@ -112,6 +232,22 @@ const secretHygieneLint = S.Agent.Lint({
   fixes: ["**"],
 });
 
+// Judgment is required here because the same fallback value can be safe for
+// a read-only display and authorization-bypassing for a write consumer.
+const failClosedAuthorization = S.Agent.Lint({
+  agent: S.Agents.luna,
+  prompt: S.file("//workflows/lints/fail-closed.md"),
+  data: [
+    S.gitDiff({
+      paths: [
+        "apps/*/src/server/**",
+        "packages/deploy/src/bff/**",
+        "packages/account/src/**",
+      ],
+    }),
+  ],
+});
+
 // engineNames enforces the Build page's own contract
 // (smither-run-mapper.ts): engine vocabulary never reaches product labels.
 const engineNamesLint = S.Agent.Lint({
@@ -123,6 +259,234 @@ const engineNamesLint = S.Agent.Lint({
 
 const agentLints = S.Suite({
   tests: [engineNamesLint, registryParityLint, secretHygieneLint],
+});
+
+const cliRegistrationParity = S.Shell.Test({
+  bin: S.Runtime.bin,
+  args: ["scripts/check-cli-registration.mjs"],
+  data: [
+    S.file("//scripts/check-cli-registration.mjs"),
+    S.file("//scripts/lint-utils.mjs"),
+    S.glob([
+      "packages/client/src/cli/**",
+      "packages/client/README.md",
+      "apps/landing/content/guides/reference/cli.mdx",
+    ]),
+  ],
+});
+
+const typeCheckApps = S.Suite({
+  tests: [
+    landing.typeCheck,
+    base.typeCheck,
+    portal.typeCheck,
+    build.typeCheck,
+    telegram.typeCheck,
+  ],
+});
+
+// Intent-level edit recipes mined from repeated production fixes. Prompts
+// own the sequencing and exclusions; target write sets are the hard boundary.
+const addBffRoute = S.Agent.Diff({
+  agent: S.Agents.luna,
+  prompt: S.file("//prompts/add-bff-route.md"),
+  payload: {
+    app: S.Input.String("portal|build"),
+    route: S.Input.String(
+      "domain/name, HTTP method, what it proxies, auth class, new env vars",
+    ),
+  },
+  data: [
+    S.glob([
+      "apps/portal/src/server/bff/**",
+      "apps/portal/src/app/api/bff/**",
+      "apps/portal/src/lib/api-paths.ts",
+      "apps/portal/src/lib/csrf.ts",
+      "apps/portal/src/lib/validate-input.ts",
+      "apps/portal/LOCAL_ENV.example",
+      "apps/build/src/server/bff/**",
+      "apps/build/src/app/api/bff/**",
+      "apps/build/src/lib/api-paths.ts",
+      "docs/topics/bff/facts/endpoints.md",
+      "packages/bff-observability/src/**",
+    ]),
+  ],
+  changes: [
+    "apps/portal/src/server/bff/**",
+    "apps/portal/src/app/api/**",
+    "apps/portal/src/lib/api-paths.ts",
+    "apps/portal/src/features/*/client.ts",
+    "apps/portal/src/features/*/contracts.ts",
+    "apps/portal/LOCAL_ENV.example",
+    "apps/build/src/server/bff/**",
+    "apps/build/src/app/api/**",
+    "apps/build/src/lib/api-paths.ts",
+    "apps/build/src/features/*/client.ts",
+    "docs/topics/bff/**",
+  ],
+  gates: [
+    bffRouteContract,
+    portal.test,
+    build.test,
+    envKeyParity,
+    typeCheckApps,
+  ],
+  maxRounds: 2,
+});
+
+const addCliSubcommand = S.Agent.Diff({
+  agent: S.Agents.luna,
+  prompt: S.file("//prompts/add-cli-subcommand.md"),
+  payload: {
+    command: S.Input.String(
+      "noun verb, flags, env-var fallbacks, backend call, and ~/.aomi state",
+    ),
+  },
+  data: [
+    S.glob([
+      "packages/client/src/cli/**",
+      "packages/client/test/cli/**",
+      "packages/client/README.md",
+      "apps/landing/content/guides/reference/cli.mdx",
+      "packages/deploy/src/**",
+    ]),
+  ],
+  changes: [
+    "packages/client/src/cli/**",
+    "packages/client/test/cli/**",
+    "packages/client/README.md",
+    "packages/client/package.json",
+    "apps/landing/content/guides/reference/cli.mdx",
+  ],
+  gates: [cliRegistrationParity, client.test, client.build],
+  maxRounds: 2,
+});
+
+const addEvmChain = S.Agent.Diff({
+  agent: S.Agents.sol,
+  prompt: S.file("//prompts/add-evm-chain.md"),
+  payload: {
+    chain: S.Input.String(
+      "name, chain id, native ticker, display decimals, explorer URL, RPC/Alchemy slug, testnet|mainnet",
+    ),
+  },
+  data: [
+    S.glob([
+      "packages/client/src/chains.ts",
+      "packages/client/test/chains.unit.test.ts",
+      "packages/client/test/registry-chain-artifacts.unit.test.ts",
+      "packages/account/src/better-auth/siwe.ts",
+      "apps/shadcn-registry/src/lib/wallet-kit/**",
+      "apps/shadcn-registry/src/components/icons/chains/**",
+      "apps/shadcn-registry/src/registry.ts",
+      "apps/portal/src/components/providers/wallet-providers.tsx",
+      "apps/landing/app/components/landing-*-provider.tsx",
+      "packages/react/src/runtime/utils.ts",
+      "packages/react/src/contexts/ext-user-context.tsx",
+    ]),
+  ],
+  changes: [
+    "packages/client/src/chains.ts",
+    "packages/client/test/**",
+    "packages/account/src/better-auth/siwe.ts",
+    "apps/shadcn-registry/src/**",
+    "apps/portal/src/components/providers/**",
+    "apps/landing/app/components/**",
+    "apps/docs/src/components/config.tsx",
+    "packages/react/src/runtime/**",
+    "packages/react/src/contexts/**",
+  ],
+  gates: [client.test, shadcnRegistry.build, registryParityLint, typeCheckApps],
+  maxRounds: 3,
+});
+
+const buildControlPlaneSurface = S.Agent.Diff({
+  agent: S.Agents.sol,
+  prompt: S.file("//prompts/build-control-plane-surface.md"),
+  payload: {
+    surface: S.Input.String(
+      "page or tab name, area (launch|operate|settings), data shown, and Soon-gated actions",
+    ),
+  },
+  data: [
+    S.glob([
+      "apps/build/src/app/(control-plane)/**",
+      "apps/build/src/features/**",
+      "apps/build/src/server/bff/**",
+      "apps/build/src/lib/api-paths.ts",
+      "apps/build/src/lib/deep-links.ts",
+      "apps/build/src/lib/glossary.ts",
+      "apps/build/src/components/control-plane/**",
+    ]),
+  ],
+  changes: ["apps/build/src/**", "specs/STATE.md"],
+  gates: [build.test, build.lint, engineNamesLint, typeCheckApps],
+  maxRounds: 3,
+});
+
+const deployContractExtension = S.Agent.Diff({
+  agent: S.Agents.sol,
+  prompt: S.file("//prompts/deploy-contract-extension.md"),
+  payload: {
+    field: S.Input.String(
+      "wire field or state, its OpenAPI/backend-PR source, and where it renders",
+    ),
+  },
+  data: [
+    S.glob([
+      "packages/deploy/src/**",
+      "packages/deploy/test/**",
+      "packages/client/test/fixtures/backend-openapi.json",
+      "packages/client/test/fixtures/manager-openapi.json",
+      "apps/build/src/server/bff/**",
+      "apps/build/src/features/launch/**",
+      "apps/build/src/features/operate/**",
+      "apps/portal/src/features/launch/**",
+    ]),
+  ],
+  changes: [
+    "packages/deploy/**",
+    "apps/build/src/**",
+    "apps/portal/src/features/launch/**",
+  ],
+  gates: [deploy.test, build.test, deployStatusExhaustive, typeCheckApps],
+  maxRounds: 3,
+});
+
+const releaseFanout = S.Agent.Diff({
+  agent: S.Agents.luna,
+  prompt: S.file("//prompts/release-fanout.md"),
+  payload: {
+    package: S.Input.Optional(
+      S.Input.String("package that changed; omit to derive from the diff"),
+    ),
+  },
+  data: [
+    S.gitDiff({
+      paths: ["packages/*/src/**", "apps/shadcn-registry/src/**"],
+    }),
+    S.glob([
+      "packages/*/package.json",
+      "apps/shadcn-registry/package.json",
+      "pnpm-lock.yaml",
+      "scripts/publish-package-if-needed.mjs",
+    ]),
+  ],
+  changes: [
+    "packages/*/package.json",
+    "apps/shadcn-registry/package.json",
+    "packages/*/dist/**",
+    "apps/shadcn-registry/dist/**",
+    "apps/landing/public/r/**",
+    "pnpm-lock.yaml",
+  ],
+  gates: [
+    publishCoherence,
+    buildPackages,
+    registryParityLint,
+    registryBuildIntegrity,
+  ],
+  maxRounds: 2,
 });
 
 // The backend OpenAPI contract: the committed fixture is the input and the
@@ -152,16 +516,6 @@ const typeCheck = S.Shell.Test({
   data: [react.srcs, S.file("//tsconfig.lib.json")],
 });
 
-const typeCheckApps = S.Suite({
-  tests: [
-    landing.typeCheck,
-    base.typeCheck,
-    portal.typeCheck,
-    build.typeCheck,
-    telegram.typeCheck,
-  ],
-});
-
 const test = S.Shell.Test({
   bin: S.NodeModule.Bin("vitest"),
   args: ["run"],
@@ -185,7 +539,14 @@ const checkApps = S.Suite({
 // policy jobs stay GitHub-native (see .github/PACKAGE.ts). An unaffected
 // target is a cache hit, which subsumes hand-maintained path filters.
 const ci = S.Suite({
-  tests: [check, checkApps, buildPackages, openapiContract, agentLints],
+  tests: [
+    check,
+    checkApps,
+    buildPackages,
+    openapiContract,
+    agentLints,
+    deterministicLints,
+  ],
 });
 
 const clean = S.Clean({
@@ -322,13 +683,19 @@ const vercelBuild = S.Shell.Build({
 
 export const Package = S.Package({
   targets: {
+    addBffRoute,
+    addCliSubcommand,
+    addEvmChain,
     agentLints,
     authStack,
     authStackSmoke,
     authStackStatus,
     authStackStop,
+    bffRouteContract,
+    bffRouteContractFix,
     buildAll,
     buildApps,
+    buildControlPlaneSurface,
     buildLib,
     buildPackages,
     check,
@@ -338,25 +705,36 @@ export const Package = S.Package({
     cleanApps,
     cleanNext,
     cleanPackages,
+    cliRegistrationParity,
     commit,
     deployRegistry,
+    deployContractExtension,
+    deployStatusExhaustive,
+    deterministicLints,
     engineNamesLint,
+    envKeyParity,
+    failClosedAuthorization,
     lint,
     lintApps,
     openapiContract,
     openapiLive,
+    paymasterForwardedHost,
     postCommit,
     preCommit,
     prePush,
     prettier,
     prettierFix,
     publish,
+    publishCoherence,
+    registryBuildIntegrity,
     registryParityLint,
+    releaseFanout,
     repowiki,
     repowikiDoctor,
     repowikiRefresh,
     retainCommit,
     secretHygieneLint,
+    singleInstanceProviderSdk,
     srcs,
     start,
     test,
