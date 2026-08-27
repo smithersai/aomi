@@ -52,6 +52,7 @@ apps/shadcn-registry/dist
 apps/widget-consumer/dist
 
 # generated package JavaScript bundles
+packages/client/dist/
 packages/*/dist/*.js
 packages/*/dist/*.cjs
 packages/*/dist/*.map
