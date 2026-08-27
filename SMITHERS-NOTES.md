@@ -119,11 +119,15 @@ warnings) without hiding the defects that motivated them:
   #226, #231, #253, #256, #290, #377, #384, #396, #406, #434, #438,
   #484, #503, #528, #539).
 
-The registry package build now states its package cwd explicitly because
-package-mode commands execute at repository root. It is unsandboxed but
-offline: `tsx` needs a host-temp IPC socket that macOS `sandbox-exec`
-denies. This lets `//:registryBuildIntegrity` execute and report the tree's
-actual registry defects instead of being skipped behind a broken prerequisite.
+The client, deploy, React, and registry package builds now state their package
+cwd explicitly because package-mode commands execute at repository root. This
+prevents a package `tsup` gate from accidentally loading the root config and
+passing against stale tracked output. The registry build is unsandboxed but
+offline: `tsx` needs a host-temp IPC socket that macOS `sandbox-exec` denies.
+The private root build now emits to the root manifest's declared `dist/`.
+Together these changes make the release workflow's build gates real and let
+`//:registryBuildIntegrity` report the tree's registry defects instead of being
+skipped behind a broken prerequisite.
 
 ## API symbols used here that neither force nor optimism uses
 

@@ -6,7 +6,8 @@ const srcs = S.Filegroup({
 });
 
 const build = S.Shell.Build({
-  bin: S.NodeModule.Bin("tsup"),
+  bun: "await $`cd packages/client && ${tsup}`",
+  using: { tsup: S.NodeModule.Bin("tsup") },
   data: [srcs, S.file("tsup.config.ts")],
   outDirs: ["dist"],
 });

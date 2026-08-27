@@ -10,7 +10,8 @@ const srcs = S.Filegroup({
 // package's tsup, and the root's build:lib (//tsup.config.ts) which emits
 // the root aomi-widget dist; //:buildLib carries that second edge.
 const build = S.Shell.Build({
-  bin: S.NodeModule.Bin("tsup"),
+  bun: "await $`cd packages/react && ${tsup}`",
+  using: { tsup: S.NodeModule.Bin("tsup") },
   data: [srcs, client.build, S.file("tsup.config.ts")],
   outDirs: ["dist"],
 });
