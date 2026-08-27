@@ -1,5 +1,13 @@
 # Canonical Landing
 
+Current session goal: **PR-HISTORY FACTORY ENCODING IMPLEMENTED 2026-08-27**
+— encode the aomi recipes, deterministic and agentic lints, and release
+workflows synthesized from 632 mined aomi/aomi-sdk pull requests. The graph now
+loads 151 targets with zero warnings; the requested live defects reproduce as
+red deterministic targets, publish coherence and OpenAPI fixture union remain
+green, and the BFF fix lane inserts all 39 missing Node runtime declarations,
+turns its lint green, and restores the demo files afterward.
+
 Current session goal: **NON-HOMEPAGE GTM COPY ALIGNMENT VERIFIED 2026-08-26**
 — updated the approved language across About, Human Interface, Agent Toolings,
 REST APIs, Plugin SDK, Trading, DeFi, Fintech, Wallets, and Contact while

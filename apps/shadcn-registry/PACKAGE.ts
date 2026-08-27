@@ -11,7 +11,10 @@ const srcs = S.Filegroup({
 // build:package (tsup && dist/styles.css). One target because both steps
 // emit into the same dist/ tree.
 const build = S.Shell.Build({
-  bun: "await $`${tsx} scripts/build-registry.js`\nawait $`${tsup}`\nawait $`${node} scripts/build-package-css.mjs`",
+  // Package targets execute from the repository root. Keep the package
+  // working directory explicit because both codegen and tsup resolve their
+  // source paths relative to it.
+  bun: "await $`cd apps/shadcn-registry && ${tsx} scripts/build-registry.js`\nawait $`cd apps/shadcn-registry && ${tsup}`\nawait $`cd apps/shadcn-registry && ${node} scripts/build-package-css.mjs`",
   using: {
     tsx: S.NodeModule.Bin("tsx"),
     tsup: S.NodeModule.Bin("tsup"),
@@ -19,6 +22,10 @@ const build = S.Shell.Build({
   },
   data: [srcs, client.build, react.build],
   outDirs: ["dist"],
+  // tsx creates an IPC socket in the host temporary directory. macOS
+  // sandbox-exec rejects that listen(2), so this build cannot use the
+  // default no-network profile even though the build itself is offline.
+  sandbox: "none",
 });
 
 export const Package = S.Package({

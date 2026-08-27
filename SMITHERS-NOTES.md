@@ -83,6 +83,48 @@ What is encoded:
   only, which is what ci.yml's apps job invokes). `dev:landing:live`
   keeps a literal `tsup --watch` because no watch attr exists.
 
+## PR-history-mined targets (2026-08-27)
+
+The 632-PR mining synthesis adds 30 loadable targets (151 total, zero
+warnings) without hiding the defects that motivated them:
+
+- **Deterministic lints:** `//:bffRouteContract` and its mechanical
+  `//:bffRouteContractFix` (PRs #205, #207-#209, #233, #237, #238),
+  `//:publishCoherence` (#104, #191, #218, #227, #369, #387, #494,
+  #505, #509, #510, #517), `//:singleInstanceProviderSdk` (#419, #454,
+  #456, #471), `//:deployStatusExhaustive` (#210, #221, #244, #247,
+  #267), `//:paymasterForwardedHost` (#135),
+  `//:registryBuildIntegrity` (#32, #33, #35, #67, #87, #88, #91,
+  #135, #450, #538), and `//:envKeyParity` (#68, #132, #135, #205,
+  #241, #243, #248, #276, #302, #312, #398, #404). They are grouped
+  by `//:deterministicLints`, which `//:ci` now includes. The existing
+  `//:agentLints` suite is unchanged; the judgement-based
+  `//:failClosedAuthorization` lint is separate (#233, #243, #336,
+  #357, #386, #387, #491, #516, #537).
+- **Recipes:** `//:releaseFanout`, `//:addEvmChain`,
+  `//:deployContractExtension`, `//:addBffRoute`,
+  `//:buildControlPlaneSurface`, and `//:addCliSubcommand` encode the
+  repeated edit sequences and exact write boundaries cited by those same
+  PR families. `//:cliRegistrationParity` is the new deterministic gate
+  for the CLI recipe.
+- **Release workflows:** `//.github:releaseTrain` and
+  `//:frontendReleaseTrain` reproduce the frontend release/backmerge
+  gates (#124, #131, #187, #196, #204, #342, #354, #368, #392,
+  #481-#483, #499-#502, #511, #512, #533, #540);
+  `//:registryRelease` and `//:installSmoke` encode the registry build,
+  publish, deploy, and clean-install proof (#27, #28, #32, #33, #35,
+  #87, #88, #104, #135, #450, #538); and
+  `//:contractFixtureRefresh`, `//:openapiFixtureUnion`, and its fixture
+  PR lane preserve both production and staging OpenAPI operations (#225,
+  #226, #231, #253, #256, #290, #377, #384, #396, #406, #434, #438,
+  #484, #503, #528, #539).
+
+The registry package build now states its package cwd explicitly because
+package-mode commands execute at repository root. It is unsandboxed but
+offline: `tsx` needs a host-temp IPC socket that macOS `sandbox-exec`
+denies. This lets `//:registryBuildIntegrity` execute and report the tree's
+actual registry defects instead of being skipped behind a broken prerequisite.
+
 ## API symbols used here that neither force nor optimism uses
 
 Specified in one line each; all are proposed, and none weakened the
